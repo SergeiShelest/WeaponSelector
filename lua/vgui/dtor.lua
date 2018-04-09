@@ -111,7 +111,7 @@ function PANEL:Paint( w, h )
 		end
 
 		surface.SetDrawColor( 0, 0, 255, 255 )
-		drawTor( xp, yp, r2 + 2, r - 2, 25, Sector, Sector/2 - Ang + 90 - Sector/2 )
+		drawTor( xp, yp, r2 + 2, r - 2, self.smoothing, Sector, Sector/2 - Ang + 90 - Sector/2 )
 
 		for i = 0, Count - 1 do
 			rad = math.rad( Sector/2 - i * Sector + 90 - Sector )

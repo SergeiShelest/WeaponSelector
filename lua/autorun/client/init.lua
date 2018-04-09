@@ -1,5 +1,7 @@
 local PANEL = {}
 
+local lp = LocalPlayer()
+
 local function OpenWS()
 
 	local slot = {}
@@ -13,9 +15,18 @@ local function OpenWS()
 
 	local Mat = nil
 
-	for k, v in pairs( LocalPlayer():GetWeapons() ) do
+	for k, v in pairs( lp:GetWeapons() ) do
 			
 		Mat = Material("vgui/hud/"..v:GetClass())
+
+		if Mat:IsError() then
+			Mat = Material( "vgui/"..v:GetClass() )
+		end
+
+
+		if Mat:IsError() then
+			Mat = Material( "vgui/"..v:GetClass()..".png" )
+		end
 
 		if Mat:IsError() then
 			Mat = Material( "weapons/swep" )
@@ -43,23 +54,56 @@ local function OpenWS()
 	local delay = 0
 	local Return = nil
 
+	local ReturnCh = nil
+
 	function PANEL.Tor:Think()
+
+		Return = PANEL.Tor:GetReturn()
+
+		if Return ~= ReturnCh then
+			
+			sound.Play( "items/flashlight1.wav", lp:GetPos(), 75, 110, 1 )
+		
+		end
+
 		if input.IsMouseDown( MOUSE_LEFT ) and CurTime() > delay then
 
 			delay = CurTime() + 0.3
-			Return = PANEL.Tor:GetReturn()
 
-			if TypeID( Return ) == TYPE_TABLE then
-					
+			if TypeID( Return ) == TYPE_TABLE and table.Count( Return ) > 0  then
+				
+				sound.Play( "items/ammo_pickup.wav", lp:GetPos(), 75, 100, 1 )
 				PANEL.Tor:SetArray( Return )
 
-			else
+			end
+
+			if TypeID( Return ) ~= TYPE_TABLE then
 				
+				sound.Play( "items/gift_pickup.wav", lp:GetPos(), 75, 100, 1 )
 				input.SelectWeapon( Return )
 				PANEL.Fr:Remove()
 
 			end
+
 		end
+
+		if input.IsMouseDown( MOUSE_RIGHT ) and CurTime() > delay  then
+
+			delay = CurTime() + 0.3
+
+			if TypeID( Return ) == TYPE_TABLE then
+			
+				PANEL.Fr:Remove()	
+			
+			else
+			
+				PANEL.Tor:SetArray( slot )
+			
+			end
+		end
+
+		ReturnCh = PANEL.Tor:GetReturn()
+
 	end
 end
 
