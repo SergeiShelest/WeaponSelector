@@ -1,6 +1,5 @@
-local PANEL = {}
 
-local lp = LocalPlayer()
+local PANEL = {}
 
 local function OpenWS()
 
@@ -13,9 +12,10 @@ local function OpenWS()
 	slot[5] = {ret = {}, title = "Explosive", ico = Material("weapons/5.png")}
 	slot[6] = {ret = {}, title = "Tools", ico = Material("weapons/6.png")}
 
+	local Ply = LocalPlayer()
 	local Mat = nil
 
-	for k, v in pairs( lp:GetWeapons() ) do
+	for k, v in pairs( LocalPlayer():GetWeapons() ) do
 			
 		Mat = Material("vgui/hud/"..v:GetClass())
 
@@ -43,6 +43,7 @@ local function OpenWS()
 	PANEL.Fr:SetDraggable( true )
 	PANEL.Fr:SetSizable( true )
 	PANEL.Fr:MakePopup()
+	PANEL.Fr:ShowCloseButton( false )
 	PANEL.Fr.Paint = function(self, w, h) end
 
 	PANEL.Tor = vgui.Create( "DTor", PANEL.Fr )
@@ -53,7 +54,6 @@ local function OpenWS()
 
 	local delay = 0
 	local Return = nil
-
 	local ReturnCh = nil
 
 	function PANEL.Tor:Think()
@@ -62,9 +62,11 @@ local function OpenWS()
 
 		if Return ~= ReturnCh then
 			
-			sound.Play( "items/flashlight1.wav", lp:GetPos(), 75, 110, 1 )
+			sound.Play( "items/flashlight1.wav", Ply:GetPos(), 75, 110, 1 )
 		
 		end
+
+		ReturnCh = PANEL.Tor:GetReturn()
 
 		if input.IsMouseDown( MOUSE_LEFT ) and CurTime() > delay then
 
@@ -72,14 +74,14 @@ local function OpenWS()
 
 			if TypeID( Return ) == TYPE_TABLE and table.Count( Return ) > 0  then
 				
-				sound.Play( "items/ammo_pickup.wav", lp:GetPos(), 75, 100, 1 )
+				sound.Play( "items/ammo_pickup.wav", Ply:GetPos(), 75, 100, 1 )
 				PANEL.Tor:SetArray( Return )
 
 			end
 
 			if TypeID( Return ) ~= TYPE_TABLE then
 				
-				sound.Play( "items/gift_pickup.wav", lp:GetPos(), 75, 100, 1 )
+				sound.Play( "items/gift_pickup.wav", Ply:GetPos(), 75, 100, 1 )
 				input.SelectWeapon( Return )
 				PANEL.Fr:Remove()
 
@@ -101,14 +103,11 @@ local function OpenWS()
 			
 			end
 		end
-
-		ReturnCh = PANEL.Tor:GetReturn()
-
 	end
 end
 
 hook.Add( "Think", "OpenWS", function()
-	if input.IsMouseDown( MOUSE_MIDDLE ) and not IsValid( PANEL.Fr ) then
+	if input.IsMouseDown( MOUSE_MIDDLE ) and not IsValid( PANEL.Fr ) and not vgui.CursorVisible() then
 
 		OpenWS()
 

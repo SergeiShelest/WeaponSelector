@@ -31,9 +31,6 @@ function PANEL:Init()
 	self.array = {}
 	self.return_ = nil
 
-	self:SetMouseInputEnabled( true )
-	self:SetKeyboardInputEnabled( true )
-
 end
 
 function PANEL:SetSmoothing( smoothing )
