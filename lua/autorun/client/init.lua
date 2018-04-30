@@ -1,7 +1,7 @@
 
 local PANEL = {}
 
-local function OpenWS()
+local function OpenWS(DMC)
 
 	local slot = {}
 
@@ -13,26 +13,10 @@ local function OpenWS()
 	slot[6] = {ret = {}, title = "Tools", ico = Material("weapons/6.png")}
 
 	local Ply = LocalPlayer()
-	local Mat = nil
 
 	for k, v in pairs( LocalPlayer():GetWeapons() ) do
 			
-		Mat = Material("vgui/hud/"..v:GetClass())
-
-		if Mat:IsError() then
-			Mat = Material( "vgui/"..v:GetClass() )
-		end
-
-
-		if Mat:IsError() then
-			Mat = Material( "vgui/"..v:GetClass()..".png" )
-		end
-
-		if Mat:IsError() then
-			Mat = Material( "weapons/swep" )
-		end
-
-		table.insert( slot[v:GetSlot() +1].ret, {ret = v, title = v:GetPrintName(), ico = Mat} )
+		table.insert( slot[v:GetSlot() +1].ret, {ret = v, title = v:GetPrintName(), ico = v.WepSelectIcon} )
 
 	end
 
@@ -40,11 +24,14 @@ local function OpenWS()
 	PANEL.Fr:SetPos( 0, 0 )
 	PANEL.Fr:SetSize( ScrW(), ScrH() )
 	PANEL.Fr:SetTitle( "" )
-	PANEL.Fr:SetDraggable( true )
-	PANEL.Fr:SetSizable( true )
-	PANEL.Fr:MakePopup()
+	PANEL.Fr:SetDraggable( false )
+	PANEL.Fr:SetSizable( false )
 	PANEL.Fr:ShowCloseButton( false )
 	PANEL.Fr.Paint = function(self, w, h) end
+
+	if not DMC then
+		PANEL.Fr:MakePopup()
+	end
 
 	PANEL.Tor = vgui.Create( "DTor", PANEL.Fr )
 	PANEL.Tor:SetArray( slot )
@@ -52,64 +39,79 @@ local function OpenWS()
 	PANEL.Tor:SetPos( 0, 0 )
 	PANEL.Tor:Dock( FILL )
 
-	local delay = 0
-	local Return = nil
-	local ReturnCh = nil
+	PANEL.Tor.DisableMouseControl = DMC
 
-	function PANEL.Tor:Think()
-
-		Return = PANEL.Tor:GetReturn()
-
-		if Return ~= ReturnCh then
-			
-			sound.Play( "items/flashlight1.wav", Ply:GetPos(), 75, 110, 1 )
+	function PANEL.Tor:Return( Return )
 		
-		end
+		sound.Play( "items/gift_pickup.wav", Ply:GetPos(), 75, 100, 1 )
+		input.SelectWeapon( Return )
 
-		ReturnCh = PANEL.Tor:GetReturn()
-
-		if input.IsMouseDown( MOUSE_LEFT ) and CurTime() > delay then
-
-			delay = CurTime() + 0.3
-
-			if TypeID( Return ) == TYPE_TABLE and table.Count( Return ) > 0  then
-				
-				sound.Play( "items/ammo_pickup.wav", Ply:GetPos(), 75, 100, 1 )
-				PANEL.Tor:SetArray( Return )
-
-			end
-
-			if TypeID( Return ) ~= TYPE_TABLE then
-				
-				sound.Play( "items/gift_pickup.wav", Ply:GetPos(), 75, 100, 1 )
-				input.SelectWeapon( Return )
-				PANEL.Fr:Remove()
-
-			end
-
-		end
-
-		if input.IsMouseDown( MOUSE_RIGHT ) and CurTime() > delay  then
-
-			delay = CurTime() + 0.3
-
-			if TypeID( Return ) == TYPE_TABLE then
-			
-				PANEL.Fr:Remove()	
-			
-			else
-			
-				PANEL.Tor:SetArray( slot )
-			
-			end
-		end
 	end
+
+	function PANEL.Tor:Chandge( Return )
+		
+		sound.Play( "items/flashlight1.wav", Ply:GetPos(), 75, 110, 1 )
+
+	end
+
+	function PANEL.Tor:Next( Return )
+		
+		sound.Play( "items/ammo_pickup.wav", Ply:GetPos(), 75, 100, 1 )
+
+	end
+
+	function PANEL.Tor:Del()
+
+		PANEL.Fr:Remove()
+
+	end
+
 end
 
-hook.Add( "Think", "OpenWS", function()
-	if input.IsMouseDown( MOUSE_MIDDLE ) and not IsValid( PANEL.Fr ) and not vgui.CursorVisible() then
+hook.Add("PlayerBindPress", "MouseWheel", function(ply, bind, pressed)
+	
+	if (bind == "invprev" or bind == "invnext") and not IsValid( PANEL.Fr ) and not vgui.CursorVisible() then
 
-		OpenWS()
+		OpenWS(true)
 
 	end
+
+	if bind == "invprev" then
+	
+		PANEL.Tor:PosGoBack()
+	
+	end
+
+	if bind == "invnext" then
+
+		PANEL.Tor:PosGoNext()
+	
+	end
+	
+	if bind == "+attack" and IsValid( PANEL.Fr ) then
+		print( 1 )
+		return true
+	
+	end
+
+end)
+
+hook.Add( "Think", "OpenWS", function()
+	
+	if input.IsMouseDown( MOUSE_MIDDLE ) and not IsValid( PANEL.Fr ) and not vgui.CursorVisible() then
+
+		OpenWS(false)
+
+	end
+
+end )
+
+hook.Add( "HUDShouldDraw", "HideStandartHud", function( name )
+    
+    if name == "CHudWeaponSelection" then 
+        
+        return false 
+        
+    end    
+    
 end )
